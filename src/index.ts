@@ -426,6 +426,26 @@ build: (payload) => ({
 					${EMAIL_REPLY_HINT}
 				`
 		})
+		}
+	},
+	{
+		key: 'admin_post_created',
+		label: '新帖通知管理员',
+		requiredFields: ['postId', 'title', 'username'],
+		defaults: (_origin) => ({
+			postId: '0',
+			title: '(无标题)',
+			username: '匿名'
+		}),
+		build: (payload) => ({
+			subject: `[论坛] 新帖：${escapeHtml(payload.title)}`,
+			html: `
+					<h1>新帖通知</h1>
+					<p><strong>用户：</strong>${escapeHtml(payload.username)}</p>
+					<p><strong>标题：</strong>${escapeHtml(payload.title)}</p>
+					<p><a href="https://2x.nz/forum/post/?id=${encodeURIComponent(payload.postId)}">查看帖子</a></p>
+				`
+		})
 	}
 ];
 
@@ -3310,6 +3330,22 @@ export default {
 				const postId = Number(meta?.last_row_id || 0) || null;
 
 				await security.logAudit(userPayload.id, 'CREATE_POST', 'post', String(postId || 'new'), { title_length: safeTitle.length }, request);
+
+				// 新帖通知管理员
+				if (postId) {
+					ctx.waitUntil((async () => {
+						try {
+							const admin = await env.forum_db.prepare("SELECT email FROM users WHERE role = 'admin' AND email IS NOT NULL LIMIT 1").first();
+							if (admin?.email) {
+								await sendEmailByTemplate(admin.email as string, 'admin_post_created', {
+									postId: String(postId),
+									title: safeTitle,
+									username: userPayload.username || '',
+								});
+							}
+						} catch {}
+					})());
+				}
 
 				return jsonResponse({ success, id: postId }, 201);
 			} catch (e) {
