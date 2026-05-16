@@ -571,8 +571,8 @@ export default {
 		const DEFAULT_DRAW_COOLDOWN_SECONDS = 0;
 		const BOOLEAN_SETTING_KEYS = new Set([
 			'turnstile_enabled',
-			'notify_on_user_delete',
-			'notify_on_post_delete',
+			"notify_on_post_delete",
+			"notify_on_new_post",
 			'notify_on_username_change',
 			'notify_on_avatar_change',
 			'notify_on_manual_verify'
@@ -750,6 +750,7 @@ export default {
 					notify_on_username_change: false,
 					notify_on_avatar_change: false,
 					notify_on_manual_verify: false,
+t				notify_on_new_post: true,
 					session_ttl_days: sessionTtlDays,
 					draw_cooldown_seconds: DEFAULT_DRAW_COOLDOWN_SECONDS,
 					home_intro_markdown: DEFAULT_HOME_INTRO_MARKDOWN,
@@ -796,6 +797,7 @@ export default {
 					notify_on_post_delete,
 					notify_on_username_change,
 					notify_on_avatar_change,
+t			notify_on_new_post,
 					notify_on_manual_verify,
 					session_ttl_days,
 					draw_cooldown_seconds,
@@ -812,6 +814,7 @@ export default {
 				if (notify_on_username_change !== undefined) batch.push(stmt.bind('notify_on_username_change', notify_on_username_change ? '1' : '0'));
 				if (notify_on_avatar_change !== undefined) batch.push(stmt.bind('notify_on_avatar_change', notify_on_avatar_change ? '1' : '0'));
 				if (notify_on_manual_verify !== undefined) batch.push(stmt.bind('notify_on_manual_verify', notify_on_manual_verify ? '1' : '0'));
+t			if (notify_on_new_post !== undefined) batch.push(stmt.bind('notify_on_new_post', notify_on_new_post ? '1' : '0'));
 				if (session_ttl_days !== undefined) {
 					const parsedSessionTtlDays = Number.parseInt(String(session_ttl_days), 10);
 					if (!Number.isInteger(parsedSessionTtlDays) || parsedSessionTtlDays < 1 || parsedSessionTtlDays > MAX_SESSION_TTL_DAYS) {
@@ -3331,17 +3334,20 @@ export default {
 
 				await security.logAudit(userPayload.id, 'CREATE_POST', 'post', String(postId || 'new'), { title_length: safeTitle.length }, request);
 
-				// 新帖通知管理员
+				// 新帖通知管理员（需开启设置）
 				if (postId) {
 					ctx.waitUntil((async () => {
 						try {
-							const admin = await env.forum_db.prepare("SELECT email FROM users WHERE role = 'admin' AND email IS NOT NULL LIMIT 1").first();
-							if (admin?.email) {
-								await sendEmailByTemplate(admin.email as string, 'admin_post_created', {
-									postId: String(postId),
-									title: safeTitle,
-									username: userPayload.username || '',
-								});
+							const setting = await env.forum_db.prepare("SELECT value FROM settings WHERE key = 'notify_on_new_post'").first();
+							if (setting?.value === '1') {
+								const admin = await env.forum_db.prepare("SELECT email FROM users WHERE role = 'admin' AND email IS NOT NULL LIMIT 1").first();
+								if (admin?.email) {
+									await sendEmailByTemplate(admin.email as string, 'admin_post_created', {
+										postId: String(postId),
+										title: safeTitle,
+										username: userPayload.username || '',
+									});
+								}
 							}
 						} catch {}
 					})());
