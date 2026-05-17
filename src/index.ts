@@ -426,7 +426,6 @@ build: (payload) => ({
 					${EMAIL_REPLY_HINT}
 				`
 		})
-		}
 	},
 	{
 		key: 'admin_post_created',
@@ -750,7 +749,7 @@ export default {
 					notify_on_username_change: false,
 					notify_on_avatar_change: false,
 					notify_on_manual_verify: false,
-t				notify_on_new_post: true,
+notify_on_new_post: true,
 					session_ttl_days: sessionTtlDays,
 					draw_cooldown_seconds: DEFAULT_DRAW_COOLDOWN_SECONDS,
 					home_intro_markdown: DEFAULT_HOME_INTRO_MARKDOWN,
@@ -797,7 +796,7 @@ t				notify_on_new_post: true,
 					notify_on_post_delete,
 					notify_on_username_change,
 					notify_on_avatar_change,
-t			notify_on_new_post,
+notify_on_new_post,
 					notify_on_manual_verify,
 					session_ttl_days,
 					draw_cooldown_seconds,
@@ -814,7 +813,7 @@ t			notify_on_new_post,
 				if (notify_on_username_change !== undefined) batch.push(stmt.bind('notify_on_username_change', notify_on_username_change ? '1' : '0'));
 				if (notify_on_avatar_change !== undefined) batch.push(stmt.bind('notify_on_avatar_change', notify_on_avatar_change ? '1' : '0'));
 				if (notify_on_manual_verify !== undefined) batch.push(stmt.bind('notify_on_manual_verify', notify_on_manual_verify ? '1' : '0'));
-t			if (notify_on_new_post !== undefined) batch.push(stmt.bind('notify_on_new_post', notify_on_new_post ? '1' : '0'));
+if (notify_on_new_post !== undefined) batch.push(stmt.bind('notify_on_new_post', notify_on_new_post ? '1' : '0'));
 				if (session_ttl_days !== undefined) {
 					const parsedSessionTtlDays = Number.parseInt(String(session_ttl_days), 10);
 					if (!Number.isInteger(parsedSessionTtlDays) || parsedSessionTtlDays < 1 || parsedSessionTtlDays > MAX_SESSION_TTL_DAYS) {
