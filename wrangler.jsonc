@@ -13,7 +13,7 @@
 		{
 			"binding": "forum_db",
 			"database_name": "forum-db",
-			"database_id": "e789efde-b66b-401b-8ad9-a13099357cb6",
+			"database_id": "e22d8267-2b34-4bb6-9fa6-984f93b7cca5",
 			"remote": true,
 			"migrations_dir": "migrations"
 		}
